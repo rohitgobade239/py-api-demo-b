@@ -1,0 +1,31 @@
+name: Python CI/CD  # Name of the workflow
+
+# Run workflow on push or pull request to main branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # Linux server
+
+    steps:
+      - name: Checkout code       # Get the repository code
+        uses: actions/checkout@v3
+
+      - name: Set up Python        # Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Use Python 3.11
+
+      - name: Install dependencies # Install project packages
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run tests            # Run tests if any
+        run: |
+          if [ -f pytest.ini ] || [ -d tests ]; then pytest; else echo "No tests found"; fi
+
