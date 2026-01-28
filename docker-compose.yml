@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  docker:
+    image: docker:24-dind
+    container_name: dind-daemon
+    privileged: true
+    command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
+    volumes:
+      - dind-data:/var/lib/docker
+    environment:
+      DOCKER_TLS_CERTDIR: ""   # disable TLS for the demo (not for production)
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    user: root
+    depends_on:
+      - docker
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home        # reuse your previous volume
+    environment:
+      - DOCKER_HOST=tcp://docker:2375         # point Jenkins to the DinD daemon
+      - DOCKER_CERT_PATH=/certs               # not used here (we disabled TLS)
+      - DOCKER_TLS_VERIFY=                    # empty for demo
+    networks:
+      - devsecops-net
+
+networks:
+  devsecops-net:
+    external: true
+
+volumes:
+  jenkins_home:
+  dind-data:
+
